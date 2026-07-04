@@ -5,21 +5,19 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 // ======================================================
 // Easy Model Setting Section
 // Put your final model at: public/models/model.glb
+// If model.glb is missing, fallback scene will show.
 // ======================================================
 
 const MODEL_CONFIG = {
   path: '/models/model.glb',
 
-  // Automatically center and resize the model
   autoCenter: true,
   targetSize: 14,
 
-  // Fine tuning after loading model
   position: new THREE.Vector3(0, 0, 0),
   rotation: new THREE.Euler(0, 0, 0),
   scaleMultiplier: 1,
 
-  // Change this to -1 if the camera shows the back side of the model
   frontDirectionZ: 1
 }
 
@@ -67,7 +65,7 @@ dirLight.shadow.mapSize.height = 2048
 scene.add(dirLight)
 
 // ======================================================
-// Ground
+// Grass Ground
 // ======================================================
 
 const groundGeo = new THREE.PlaneGeometry(120, 120)
@@ -175,7 +173,6 @@ window.addEventListener('mousemove', (event) => {
   euler.y -= deltaMove.x * lookSpeed
   euler.x -= deltaMove.y * lookSpeed
 
-  // Prevent the camera from flipping upside down
   euler.x = Math.max(
     -Math.PI / 2 + 0.1,
     Math.min(Math.PI / 2 - 0.1, euler.x)
@@ -190,7 +187,8 @@ window.addEventListener('mousemove', (event) => {
 })
 
 // ======================================================
-// Load P19 GLB Model
+// Load GLB Model
+// If model.glb is missing, fallback entrance scene appears.
 // ======================================================
 
 const loadingStatus = document.getElementById('loading-status')
@@ -264,7 +262,6 @@ function fitModelToScene(model) {
     model.scale.multiplyScalar(scale)
   }
 
-  // Center the model after scaling
   box = new THREE.Box3().setFromObject(model)
 
   const center = new THREE.Vector3()
@@ -272,89 +269,287 @@ function fitModelToScene(model) {
 
   model.position.sub(center)
 
-  // Put the model on the ground
   box = new THREE.Box3().setFromObject(model)
   model.position.y -= box.min.y
 
-  // Apply final custom offset
   model.position.add(MODEL_CONFIG.position)
 }
 
 // ======================================================
-// Fallback Placeholder Scene
-// Appears only when model.glb is missing
+// Fallback P19 Entrance Scene
+// Grass + Trees + Square Flooring +
+// 3 small rectangles left, 1 big middle rectangle, 3 small rectangles right
 // ======================================================
 
 function createFallbackP19Scene() {
-  const buildingMat = new THREE.MeshStandardMaterial({
-    color: 0xd8d2c4,
-    roughness: 0.6
+  createMainEntrance()
+
+  createTree(-11, -4)
+  createTree(11, -4)
+  createTree(-12, 5)
+  createTree(12, 5)
+  createTree(-8, 8)
+  createTree(8, 8)
+}
+
+function createMainEntrance() {
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0xdedede,
+    roughness: 0.55
+  })
+
+  const innerMat = new THREE.MeshStandardMaterial({
+    color: 0x5f5f5f,
+    roughness: 0.85
   })
 
   const roofMat = new THREE.MeshStandardMaterial({
-    color: 0x8c4a2f,
-    roughness: 0.7
-  })
-
-  const roadMat = new THREE.MeshStandardMaterial({
-    color: 0x444444,
+    color: 0x5d6063,
     roughness: 0.8
   })
 
-  const building = new THREE.Mesh(
-    new THREE.BoxGeometry(10, 4, 4),
-    buildingMat
-  )
-  building.position.set(0, 2, 0)
-  building.castShadow = true
-  building.receiveShadow = true
-  scene.add(building)
+  const tileMat1 = new THREE.MeshStandardMaterial({
+    color: 0x9a9188,
+    roughness: 0.85
+  })
 
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.5, 4.8), roofMat)
-  roof.position.set(0, 4.35, 0)
+  const tileMat2 = new THREE.MeshStandardMaterial({
+    color: 0x7f776f,
+    roughness: 0.85
+  })
+
+  const pavementMat = new THREE.MeshStandardMaterial({
+    color: 0xa8a8a8,
+    roughness: 0.85
+  })
+
+  // ======================================================
+  // Square Pattern Flooring
+  // ======================================================
+
+  const tileSize = 1
+  const floorWidth = 18
+  const floorDepth = 8
+
+  for (let x = -floorWidth / 2; x < floorWidth / 2; x += tileSize) {
+    for (let z = -floorDepth / 2; z < floorDepth / 2; z += tileSize) {
+      const tileIndexX = Math.round((x + floorWidth / 2) / tileSize)
+      const tileIndexZ = Math.round((z + floorDepth / 2) / tileSize)
+
+      const tile = new THREE.Mesh(
+        new THREE.BoxGeometry(tileSize, 0.05, tileSize),
+        (tileIndexX + tileIndexZ) % 2 === 0 ? tileMat1 : tileMat2
+      )
+
+      tile.position.set(x + tileSize / 2, 0.04, z + 0.4)
+      tile.receiveShadow = true
+      scene.add(tile)
+    }
+  }
+
+  // ======================================================
+  // Front Pavement
+  // ======================================================
+
+  const frontPavement = new THREE.Mesh(
+    new THREE.BoxGeometry(22, 0.04, 4),
+    pavementMat
+  )
+
+  frontPavement.position.set(0, 0.03, 6.2)
+  frontPavement.receiveShadow = true
+  scene.add(frontPavement)
+
+  // ======================================================
+  // Entrance Wall
+  // Layout:
+  // [small] [small] [small] [LARGE] [small] [small] [small]
+  // ======================================================
+
+  const wallZ = 3
+  const wallHeight = 4.2
+  const wallDepth = 0.35
+  const wallLength = 20
+
+  const bottomBeamHeight = 0.35
+  const topBeamHeight = 0.35
+  const columnWidth = 0.45
+
+  // Bottom horizontal wall beam
+  const bottomBeam = new THREE.Mesh(
+    new THREE.BoxGeometry(wallLength, bottomBeamHeight, wallDepth),
+    wallMat
+  )
+
+  bottomBeam.position.set(0, bottomBeamHeight / 2, wallZ)
+  bottomBeam.castShadow = true
+  bottomBeam.receiveShadow = true
+  scene.add(bottomBeam)
+
+  // Top horizontal wall beam
+  const topBeam = new THREE.Mesh(
+    new THREE.BoxGeometry(wallLength, topBeamHeight, wallDepth),
+    wallMat
+  )
+
+  topBeam.position.set(0, wallHeight, wallZ)
+  topBeam.castShadow = true
+  topBeam.receiveShadow = true
+  scene.add(topBeam)
+
+  // Opening size arrangement
+  const openings = [
+    { type: 'small', width: 1.35 },
+    { type: 'small', width: 1.35 },
+    { type: 'small', width: 1.35 },
+    { type: 'large', width: 4.4 },
+    { type: 'small', width: 1.35 },
+    { type: 'small', width: 1.35 },
+    { type: 'small', width: 1.35 }
+  ]
+
+  const totalOpeningWidth = openings.reduce((sum, item) => {
+    return sum + item.width
+  }, 0)
+
+  const totalColumnCount = openings.length + 1
+  const totalColumnWidth = totalColumnCount * columnWidth
+  const usedWallWidth = totalOpeningWidth + totalColumnWidth
+
+  const sideExtensionWidth = (wallLength - usedWallWidth) / 2
+
+  let currentX = -usedWallWidth / 2
+
+  // Left side extension
+  const leftExtension = new THREE.Mesh(
+    new THREE.BoxGeometry(sideExtensionWidth, wallHeight, wallDepth),
+    wallMat
+  )
+
+  leftExtension.position.set(
+    -usedWallWidth / 2 - sideExtensionWidth / 2,
+    wallHeight / 2,
+    wallZ
+  )
+  leftExtension.castShadow = true
+  leftExtension.receiveShadow = true
+  scene.add(leftExtension)
+
+  // Right side extension
+  const rightExtension = new THREE.Mesh(
+    new THREE.BoxGeometry(sideExtensionWidth, wallHeight, wallDepth),
+    wallMat
+  )
+
+  rightExtension.position.set(
+    usedWallWidth / 2 + sideExtensionWidth / 2,
+    wallHeight / 2,
+    wallZ
+  )
+  rightExtension.castShadow = true
+  rightExtension.receiveShadow = true
+  scene.add(rightExtension)
+
+  // First vertical column
+  createWallColumn(
+    currentX + columnWidth / 2,
+    wallHeight / 2,
+    wallZ,
+    columnWidth,
+    wallHeight,
+    wallDepth,
+    wallMat
+  )
+
+  currentX += columnWidth
+
+  openings.forEach((opening) => {
+    const openingCenterX = currentX + opening.width / 2
+
+    const openingPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(opening.width, 3.25, 0.08),
+      innerMat
+    )
+
+    openingPanel.position.set(openingCenterX, 1.95, wallZ - 0.25)
+    openingPanel.receiveShadow = true
+    scene.add(openingPanel)
+
+    currentX += opening.width
+
+    createWallColumn(
+      currentX + columnWidth / 2,
+      wallHeight / 2,
+      wallZ,
+      columnWidth,
+      wallHeight,
+      wallDepth,
+      wallMat
+    )
+
+    currentX += columnWidth
+  })
+
+  // ======================================================
+  // Simple Grey Roof
+  // ======================================================
+
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(21, 0.35, 6.5),
+    roofMat
+  )
+
+  roof.position.set(0, 4.45, 0.7)
+  roof.rotation.x = -0.15
   roof.castShadow = true
+  roof.receiveShadow = true
   scene.add(roof)
 
-  const entrance = new THREE.Mesh(
-    new THREE.BoxGeometry(1.8, 2.2, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0x30475e })
+  const roofBack = new THREE.Mesh(
+    new THREE.BoxGeometry(21, 0.25, 6.5),
+    roofMat
   )
-  entrance.position.set(0, 1.1, 2.1)
-  entrance.castShadow = true
-  scene.add(entrance)
 
-  const sign = new THREE.Mesh(
-    new THREE.BoxGeometry(2.6, 1.2, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  roofBack.position.set(0, 4.25, -1.1)
+  roofBack.rotation.x = 0.15
+  roofBack.castShadow = true
+  roofBack.receiveShadow = true
+  scene.add(roofBack)
+}
+
+function createWallColumn(x, y, z, width, height, depth, material) {
+  const column = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, depth),
+    material
   )
-  sign.position.set(-5.5, 1.5, 3.2)
-  sign.castShadow = true
-  scene.add(sign)
 
-  const road = new THREE.Mesh(new THREE.BoxGeometry(18, 0.06, 3), roadMat)
-  road.position.set(0, 0.04, 7)
-  road.receiveShadow = true
-  scene.add(road)
-
-  createTree(-7, -3)
-  createTree(7, -3)
-  createTree(-8, 5)
-  createTree(8, 5)
+  column.position.set(x, y, z)
+  column.castShadow = true
+  column.receiveShadow = true
+  scene.add(column)
 }
 
 function createTree(x, z) {
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18, 0.25, 1.5),
-    new THREE.MeshStandardMaterial({ color: 0x7b4b2a })
+    new THREE.CylinderGeometry(0.18, 0.25, 1.5, 16),
+    new THREE.MeshStandardMaterial({
+      color: 0x7b4b2a,
+      roughness: 0.8
+    })
   )
+
   trunk.position.set(x, 0.75, z)
   trunk.castShadow = true
   scene.add(trunk)
 
   const leaves = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0x2f8f46 })
+    new THREE.SphereGeometry(1, 18, 18),
+    new THREE.MeshStandardMaterial({
+      color: 0x2f8f46,
+      roughness: 0.7
+    })
   )
+
   leaves.position.set(x, 2, z)
   leaves.castShadow = true
   scene.add(leaves)
@@ -392,30 +587,28 @@ function createHotspot(x, y, z, title, description) {
   return mesh
 }
 
-// Current placeholder hotspot positions.
-// Later adjust these to match the real model.
 createHotspot(
   0,
-  3,
-  3.5,
+  2.6,
+  3.8,
   'Main Entrance',
-  'This is the main entrance area of UTM P19. It is used as the starting point for visitors in this 3D campus tour.'
+  'This is the large middle entrance opening of the P19 building.'
 )
 
 createHotspot(
-  -5.5,
-  2.2,
-  3.5,
-  'P19 Signboard',
-  'This signboard helps users identify the selected P19 location. It can be matched with the real signboard from the group reference photos.'
+  -5.1,
+  2.1,
+  3.8,
+  'Left Entrance Openings',
+  'This side contains three smaller rectangular openings.'
 )
 
 createHotspot(
-  4,
-  1.5,
-  6,
-  'Student Walkway',
-  'This walkway represents the path used by students and visitors when moving around the P19 area.'
+  5.1,
+  2.1,
+  3.8,
+  'Right Entrance Openings',
+  'This side contains three smaller rectangular openings.'
 )
 
 // ======================================================
@@ -428,7 +621,6 @@ const mouse = new THREE.Vector2()
 function onMouseClick(event) {
   if (!tourStarted) return
 
-  // Prevent UI clicks from triggering hotspot raycasting
   if (
     event.target.closest('.panel') ||
     event.target.closest('button') ||
@@ -457,27 +649,26 @@ window.addEventListener('click', onMouseClick)
 
 // ======================================================
 // Smooth Camera Navigation
-// Camera faces selected hotspot correctly
 // ======================================================
 
 const cameraViews = {
   entrance: {
-    position: new THREE.Vector3(0, 3.2, 9 * MODEL_CONFIG.frontDirectionZ),
-    lookAt: new THREE.Vector3(0, 2.2, 3.5)
+    position: new THREE.Vector3(0, 3.4, 10),
+    lookAt: new THREE.Vector3(0, 2.2, 3.2)
   },
 
   walkway: {
-    position: new THREE.Vector3(4, 2.4, 11 * MODEL_CONFIG.frontDirectionZ),
-    lookAt: new THREE.Vector3(4, 1.4, 6)
+    position: new THREE.Vector3(4, 2.5, 11),
+    lookAt: new THREE.Vector3(4, 1.5, 4)
   },
 
   signboard: {
-    position: new THREE.Vector3(-5.5, 2.6, 8 * MODEL_CONFIG.frontDirectionZ),
-    lookAt: new THREE.Vector3(-5.5, 1.8, 3.5)
+    position: new THREE.Vector3(-5.5, 2.8, 9),
+    lookAt: new THREE.Vector3(-5, 1.8, 3.5)
   },
 
   overview: {
-    position: new THREE.Vector3(0, 6.5, 16 * MODEL_CONFIG.frontDirectionZ),
+    position: new THREE.Vector3(0, 6.5, 16),
     lookAt: new THREE.Vector3(0, 2, 2)
   }
 }
@@ -615,50 +806,56 @@ function animate() {
   const delta = (currentTime - prevTime) / 1000
   prevTime = currentTime
 
-  const time = clock.getElapsedTime()
-
-  // WASD movement
-  if (tourStarted) {
-    const direction = new THREE.Vector3()
-
-    if (moveState.forward) direction.z -= 1
-    if (moveState.backward) direction.z += 1
-    if (moveState.left) direction.x -= 1
-    if (moveState.right) direction.x += 1
-
-    direction.normalize()
-
-    if (direction.length() > 0) {
-      const moveVector = direction.applyQuaternion(camera.quaternion)
-      moveVector.y = 0
-
-      if (moveVector.lengthSq() > 0) {
-        moveVector.normalize().multiplyScalar(moveSpeed * delta)
-        camera.position.add(moveVector)
-      }
-    }
-  }
-
-  // Smooth camera navigation
+  // Smooth camera movement to selected view
   if (targetCameraPosition && targetCameraQuaternion) {
-    camera.position.lerp(targetCameraPosition, 0.07)
-    camera.quaternion.slerp(targetCameraQuaternion, 0.07)
+    camera.position.lerp(targetCameraPosition, 0.04)
+    camera.quaternion.slerp(targetCameraQuaternion, 0.04)
 
     euler.setFromQuaternion(camera.quaternion)
 
-    if (camera.position.distanceTo(targetCameraPosition) < 0.08) {
+    if (camera.position.distanceTo(targetCameraPosition) < 0.05) {
       targetCameraPosition = null
       targetCameraQuaternion = null
     }
   }
 
-  // Hotspot animation
+  // WASD movement
+  if (tourStarted) {
+    const direction = new THREE.Vector3()
+    camera.getWorldDirection(direction)
+    direction.y = 0
+    direction.normalize()
+
+    const right = new THREE.Vector3()
+    right.crossVectors(direction, camera.up).normalize()
+
+    if (moveState.forward) {
+      camera.position.addScaledVector(direction, moveSpeed * delta)
+    }
+
+    if (moveState.backward) {
+      camera.position.addScaledVector(direction, -moveSpeed * delta)
+    }
+
+    if (moveState.left) {
+      camera.position.addScaledVector(right, -moveSpeed * delta)
+    }
+
+    if (moveState.right) {
+      camera.position.addScaledVector(right, moveSpeed * delta)
+    }
+
+    camera.position.y = Math.max(1.5, camera.position.y)
+  }
+
+  // Hotspot floating animation
+  const elapsedTime = clock.getElapsedTime()
+
   hotspots.forEach((hotspot, index) => {
     hotspot.position.y =
-      hotspot.userData.originalY + Math.sin(time * 3 + index) * 0.18
+      hotspot.userData.originalY + Math.sin(elapsedTime * 2 + index) * 0.12
 
-    const scale = 1 + Math.sin(time * 4 + index) * 0.1
-    hotspot.scale.set(scale, scale, scale)
+    hotspot.rotation.y += 0.02
   })
 
   renderer.render(scene, camera)
