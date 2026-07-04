@@ -3,50 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UTM 3D Campus Tour</title>
-    <meta name="description" content="Interactive 3D Campus Tour of Universiti Teknologi Malaysia (UTM)." />
-    <link rel="stylesheet" href="./style.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <title>UTM P19 Interactive Campus Tour</title>
+
+    <meta
+      name="description"
+      content="Interactive 3D Campus Tour of UTM Skudai P19."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
+
   <body>
-    <!-- 3D Canvas Container -->
+    <!-- 3D Scene -->
     <div id="canvas-container"></div>
 
-    <!-- UI Overlay -->
+    <!-- UI Layer -->
     <div id="ui-layer">
       <!-- Welcome Screen -->
       <div id="welcome-screen" class="panel active">
-        <h1>Welcome to UTM 3D Campus Tour</h1>
-        <p>Explore the vibrant environment of Universiti Teknologi Malaysia.</p>
+        <p class="mini-title">SECV3263 Multimedia Web Programming</p>
+
+        <h1>UTM P19 Interactive Campus Tour</h1>
+
+        <p>
+          Explore the selected UTM Skudai P19 location through an interactive
+          browser-based 3D campus tour.
+        </p>
+
         <button id="start-btn" class="primary-btn">Start Exploring</button>
       </div>
 
-      <!-- Instruction Panel (Initially hidden) -->
+      <!-- Top Bar -->
+      <header id="top-bar" class="hidden">
+        <div>
+          <h2>UTM P19 Tour</h2>
+          <p>WASD to move • Drag to look • Click hotspots</p>
+        </div>
+
+        <button id="light-btn" class="small-btn">Night Mode</button>
+      </header>
+
+      <!-- Instruction Panel -->
       <div id="instruction-panel" class="panel hidden">
         <h2>Controls</h2>
+
         <ul>
-          <li><strong>W, A, S, D</strong> (or Arrows) to walk around.</li>
-          <li><strong>Drag</strong> mouse to rotate the view.</li>
-          <li><strong>Click</strong> on glowing markers for information.</li>
+          <li><strong>W, A, S, D</strong> or arrow keys to move around.</li>
+          <li><strong>Drag</strong> the mouse to rotate the camera view.</li>
+          <li>
+            <strong>Click</strong> glowing markers to view location information.
+          </li>
+          <li>Use the bottom buttons to quickly visit important P19 areas.</li>
         </ul>
-        <button id="close-instructions-btn" class="secondary-btn">Close</button>
+
+        <button id="close-instructions-btn" class="secondary-btn">
+          Close
+        </button>
       </div>
 
-      <!-- Navigation/Menu (Always visible during tour) -->
-      <div id="nav-menu" class="hidden">
+      <!-- Bottom Navigation Menu -->
+      <nav id="nav-menu" class="hidden">
+        <button class="view-btn" data-view="entrance">Entrance</button>
+        <button class="view-btn" data-view="walkway">Walkway</button>
+        <button class="view-btn" data-view="signboard">Signboard</button>
+        <button class="view-btn" data-view="overview">Overview</button>
         <button id="help-btn" class="icon-btn">?</button>
-      </div>
-      
-      <!-- Information Pop-up (Hidden by default) -->
+      </nav>
+
+      <!-- Loading Status -->
+      <div id="loading-status">Loading 3D model...</div>
+
+      <!-- Information Pop-up -->
       <div id="info-popup" class="panel hidden">
         <h2 id="info-title">Location Name</h2>
-        <p id="info-desc">Description of the location goes here...</p>
+        <p id="info-desc">Description of the selected location appears here.</p>
+
         <button id="close-info-btn" class="secondary-btn">Close</button>
       </div>
     </div>
 
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
