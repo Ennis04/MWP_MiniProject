@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UTM 3D Campus Tour</title>
+    <meta name="description" content="Interactive 3D Campus Tour of Universiti Teknologi Malaysia (UTM)." />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer">
+      <!-- Welcome Screen -->
+      <div id="welcome-screen" class="panel active">
+        <h1>Welcome to UTM 3D Campus Tour</h1>
+        <p>Explore the vibrant environment of Universiti Teknologi Malaysia.</p>
+        <button id="start-btn" class="primary-btn">Start Exploring</button>
+      </div>
+
+      <!-- Instruction Panel (Initially hidden) -->
+      <div id="instruction-panel" class="panel hidden">
+        <h2>Controls</h2>
+        <ul>
+          <li><strong>W, A, S, D</strong> (or Arrows) to walk around.</li>
+          <li><strong>Drag</strong> mouse to rotate the view.</li>
+          <li><strong>Click</strong> on glowing markers for information.</li>
+        </ul>
+        <button id="close-instructions-btn" class="secondary-btn">Close</button>
+      </div>
+
+      <!-- Navigation/Menu (Always visible during tour) -->
+      <div id="nav-menu" class="hidden">
+        <button id="help-btn" class="icon-btn">?</button>
+      </div>
+      
+      <!-- Information Pop-up (Hidden by default) -->
+      <div id="info-popup" class="panel hidden">
+        <h2 id="info-title">Location Name</h2>
+        <p id="info-desc">Description of the location goes here...</p>
+        <button id="close-info-btn" class="secondary-btn">Close</button>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
