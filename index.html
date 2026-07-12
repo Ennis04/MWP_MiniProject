@@ -1,94 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>P19 UTM — Interactive 3D Campus Tour</title>
+<style>
+  :root {
+    --maroon: #7a1f2b;
+    --panel-bg: rgba(18, 16, 14, 0.62);
+    --accent: #e8a93a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #0c0d10;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  canvas { display: block; touch-action: none; outline: none; }
 
-    <title>UTM P19 Interactive Campus Tour</title>
+  #loading-screen {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #2a1815 0%, #0c0d10 75%);
+    color: #f2e9dc; transition: opacity 0.6s ease;
+  }
+  #loading-screen h2 { font-weight: 600; letter-spacing: 0.08em; margin: 16px 0 0; font-size: 14px; }
+  .spinner {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid rgba(232,169,58,0.25); border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    <meta
-      name="description"
-      content="Interactive 3D Campus Tour of UTM Skudai P19."
-    />
+  #hud {
+    position: fixed; top: 16px; left: 16px; z-index: 10;
+    max-width: 300px; color: #f4efe6;
+    background: var(--panel-bg); backdrop-filter: blur(8px);
+    border: 1px solid rgba(232,169,58,0.25); border-radius: 12px;
+    padding: 14px 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  #hud h1 { margin: 0 0 2px; font-size: 15px; letter-spacing: 0.02em; color: var(--accent); font-weight: 600; }
+  #hud .sub { font-size: 11px; opacity: 0.72; margin-bottom: 10px; }
+  #hud .controls { font-size: 12px; line-height: 1.8; opacity: 0.92; }
+  #hud kbd {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px; padding: 1px 6px; font-size: 11px; margin-right: 3px; font-family: inherit;
+  }
+  #hud.hidden { display: none; }
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  #toggle-hud {
+    position: fixed; top: 16px; right: 16px; z-index: 10;
+    background: var(--panel-bg); color: #f4efe6; border: 1px solid rgba(232,169,58,0.25);
+    border-radius: 10px; padding: 8px 12px; font-size: 12px; cursor: pointer;
+    backdrop-filter: blur(8px); font-family: inherit;
+  }
+  #toggle-hud:hover { border-color: rgba(232,169,58,0.55); }
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+  @media (max-width: 640px) {
+    #hud { max-width: calc(100vw - 88px); padding: 10px 14px; }
+    #hud .controls { font-size: 11px; line-height: 1.6; }
+  }
+</style>
+</head>
+<body>
 
-  <body>
-    <!-- 3D Scene -->
-    <div id="canvas-container"></div>
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <h2>ENTERING P19 COURTYARD&hellip;</h2>
+</div>
 
-    <!-- UI Layer -->
-    <div id="ui-layer">
-      <!-- Welcome Screen -->
-      <div id="welcome-screen" class="panel active">
-        <p class="mini-title">SECV3263 Multimedia Web Programming</p>
+<div id="hud">
+  <h1>P19 — UTM Faculty Courtyard</h1>
+  <div class="sub">Reconstructed from on-site reference photos</div>
+  <div class="controls">
+    <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</div>
+    <div>Drag / Touch — Look around</div>
+    <div>Scroll — Zoom</div>
+  </div>
+</div>
+<button id="toggle-hud" type="button">Hide info</button>
 
-        <h1>UTM P19 Interactive Campus Tour</h1>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.185.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
 
-        <p>
-          Explore the selected UTM Skudai P19 location through an interactive
-          browser-based 3D campus tour.
-        </p>
+<!-- All scene code lives in main.js and the modules it imports
+     (config.js, helpers.js, textures.js, materials.js, scene.js,
+     environment.js, components.js, decorations.js, building.js,
+     controls.js) — this file is just the page shell. -->
+<script type="module" src="./main.js"></script>
 
-        <button id="start-btn" class="primary-btn">Start Exploring</button>
-      </div>
-
-      <!-- Top Bar -->
-      <header id="top-bar" class="hidden">
-        <div>
-          <h2>UTM P19 Tour</h2>
-          <p>WASD to move • Drag to look • Click hotspots</p>
-        </div>
-
-        <button id="light-btn" class="small-btn">Night Mode</button>
-      </header>
-
-      <!-- Instruction Panel -->
-      <div id="instruction-panel" class="panel hidden">
-        <h2>Controls</h2>
-
-        <ul>
-          <li><strong>W, A, S, D</strong> or arrow keys to move around.</li>
-          <li><strong>Drag</strong> the mouse to rotate the camera view.</li>
-          <li>
-            <strong>Click</strong> glowing markers to view location information.
-          </li>
-          <li>Use the bottom buttons to quickly visit important P19 areas.</li>
-        </ul>
-
-        <button id="close-instructions-btn" class="secondary-btn">
-          Close
-        </button>
-      </div>
-
-      <!-- Bottom Navigation Menu -->
-      <nav id="nav-menu" class="hidden">
-        <button class="view-btn" data-view="entrance">Entrance</button>
-        <button class="view-btn" data-view="walkway">Walkway</button>
-        <button class="view-btn" data-view="signboard">Signboard</button>
-        <button class="view-btn" data-view="overview">Overview</button>
-        <button id="help-btn" class="icon-btn">?</button>
-      </nav>
-
-      <!-- Loading Status -->
-      <div id="loading-status">Loading 3D model...</div>
-
-      <!-- Information Pop-up -->
-      <div id="info-popup" class="panel hidden">
-        <h2 id="info-title">Location Name</h2>
-        <p id="info-desc">Description of the selected location appears here.</p>
-
-        <button id="close-info-btn" class="secondary-btn">Close</button>
-      </div>
-    </div>
-
-    <script type="module" src="/src/main.js"></script>
-  </body>
+</body>
 </html>
