@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { camera, renderer, EYE_HEIGHT } from './scene.js';
 import { CFG } from './config.js';
-import { pillars } from './components.js';
+import { resolveCustomCollisions } from './collisions.js';
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 
@@ -56,18 +56,6 @@ const moveSpeed = 4.2;
 // stop right at the threshold instead of letting people wander onto the lawn.
 const boundaryR = CFG.R1 - 0.2;
 
-function resolveCollisions(pos) {
-  const minDist = CFG.pillarRadius + 0.45;
-  for (const p of pillars) {
-    const dx = pos.x - p.x, dz = pos.z - p.z;
-    const d = Math.hypot(dx, dz);
-    if (d < minDist && d > 0.0001) {
-      const push = minDist - d;
-      pos.x += (dx / d) * push;
-      pos.z += (dz / d) * push;
-    }
-  }
-}
 
 function updateMovement(dt) {
   let moveX = 0, moveZ = 0;
@@ -89,11 +77,9 @@ function updateMovement(dt) {
   delta.normalize().multiplyScalar(moveSpeed * dt);
 
   const nextPos = camera.position.clone().add(delta);
-  resolveCollisions(nextPos);
-  if (Math.hypot(nextPos.x, nextPos.z) < boundaryR) {
-    camera.position.x = nextPos.x;
-    camera.position.z = nextPos.z;
-  }
+  resolveCustomCollisions(nextPos, 0.4); // Player radius 0.4
+  camera.position.x = nextPos.x;
+  camera.position.z = nextPos.z;
   camera.position.y = EYE_HEIGHT; // hard-locked — navigation never moves Y
 }
 

@@ -13,13 +13,13 @@ scene.fog = new THREE.Fog(0xcfe3ee, 26, 92);
 export const EYE_HEIGHT = 1.65;
 export const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 300);
 camera.rotation.order = 'YXZ'; // yaw around world Y, then pitch around the resulting local X — the standard FPS-camera order
-camera.position.copy(polar(sideAngle(0), CFG.R1 - 1.6, EYE_HEIGHT));
+camera.position.set(0, EYE_HEIGHT, -12);
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(1); // Capped to 1 to drastically improve framerate on retina screens
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap; // Cheaper than PCFSoftShadowMap
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
