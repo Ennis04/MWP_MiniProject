@@ -8,7 +8,7 @@ export function buildBackWall(scene, floorSize = 30) {
 
   // White paint material for the main wall
   const wallMat = new THREE.MeshStandardMaterial({ 
-    color: 0xfafafa, 
+    color: 0xd9dddd,
     roughness: 0.9, 
     metalness: 0.05 
   });

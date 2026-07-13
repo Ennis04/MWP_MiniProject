@@ -16,9 +16,9 @@ export function buildDoor(scene, x, z, rotY) {
   const openingHeight = 2.6;
 
   // --- MATERIALS ---
-  const extMat = new THREE.MeshStandardMaterial({ color: 0x4a8c82, roughness: 0.9 }); // Green exterior
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x4a8c82, roughness: 0.7 });
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15, roughness: 0.8 });
+  const extMat = new THREE.MeshStandardMaterial({ color: 0x729a96, roughness: 0.9 });
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x729a96, roughness: 0.7 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x75452f, roughness: 0.8 });
   const glassMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.4 });
   const metalMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
 
@@ -94,6 +94,9 @@ export function buildDoor(scene, x, z, rotY) {
   const handleRight = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8), metalMat);
   handleRight.position.set(doorX + 0.06, doorH / 2, -0.1);
   group.add(handleRight);
+
+  group.userData.interaction = { type: 'lockedDoor', prompt: 'Check door', title: 'Restricted access', description: 'This door is locked. Please continue exploring the public areas of P19, UTM.' };
+  group.traverse(child => { child.userData.interactionRoot = group; });
 
   scene.add(group);
 

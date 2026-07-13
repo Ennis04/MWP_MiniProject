@@ -57,10 +57,11 @@ function addGreenWallSign(scene, x, y, z, rotationY, number, width = 3.35) {
 
 export function buildLectureHallSignage(scene) {
   // Surface-mounted wayfinding based on the real yellow-and-charcoal graphics.
-  // Halls 5 and 4 are painted onto the broad green side panels beside the information-board walls. These panels sit at 90 degrees to the grey wall.
-  
+  // Halls 5 and 4 are painted onto the broad green side panels beside the
+  // information-board walls. These panels sit at 90 degrees to the grey wall.
   addGreenWallSign(scene, -13.75, 1.65, -1.81, Math.PI, '5', 2.25);
-  // Rear wall beside the second vending machine, facing visitors entering from the courtyard.
+  // Rear wall beside the second vending machine, facing visitors entering
+  // from the courtyard.
   addSign(scene, 9.6, 1.65, 14.71, Math.PI, '6');
   addGreenWallSign(scene, 13, 1.65, -1.81, Math.PI, '4', 2.25);
 }
