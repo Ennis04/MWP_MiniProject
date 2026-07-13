@@ -10,6 +10,8 @@ import { buildSquareRoom } from './squareRoom.js';
 import { buildFillerWalls } from './filler.js';
 import { buildVendingMachine } from './vendingMachine.js';
 import { buildStudyDesk } from './studyDesk.js';
+import { buildInformationBoard } from './informationBoard.js';
+import { buildLectureHallSignage } from './signage.js';
 
 export function buildP19Building(scene) {
   // Base Structure
@@ -45,6 +47,9 @@ export function buildP19Building(scene) {
   buildStudyDesk(scene, -13, -5, Math.PI / 2); 
   buildStudyDesk(scene, 13, -5, -Math.PI / 2); 
   buildStudyDesk(scene, 13, -5, Math.PI / 2);
+  buildInformationBoard(scene, -14.72, 2.05, -5, Math.PI / 2);
+  buildInformationBoard(scene, 14.72, 2.05, -5, -Math.PI / 2);
+  buildLectureHallSignage(scene);
 
   buildVendingMachine(scene, -13, 14, Math.PI); 
   buildVendingMachine(scene, -14, 12, Math.PI / 2);

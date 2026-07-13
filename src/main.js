@@ -9,9 +9,9 @@
 import * as THREE from 'three';
 import { scene, camera, renderer } from './scene.js';
 import './environment.js';
-import { updateControls } from './controls.js';
+import { updateControls, sitAt, standUp, isPlayerSeated } from './controls.js';
 import { buildP19Building } from './P19Building.js';
-import { playDropSound } from './vendingMachine.js';
+import { playDropSound, startVendingAnimation, updateVendingMachines } from './vendingMachine.js';
 import { setDayNightMode } from './environment.js';
 import { setCeilingLights } from './ceiling.js';
 
@@ -22,43 +22,70 @@ document.getElementById('toggle-hud').addEventListener('click', () => {
   const hidden = hud.classList.toggle('hidden');
   btn.textContent = hidden ? 'Show info' : 'Hide info';
 });
+document.getElementById('enter-tour').addEventListener('click', () => document.getElementById('welcome-screen').classList.add('hidden'));
 
-/* ---------------- DOOR INTERACTION ---------------- */
+/* ---------------- NEARBY OBJECT INTERACTION ---------------- */
 const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+const promptEl = document.getElementById('interaction-prompt');
+const infoPanel = document.getElementById('info-panel');
+const infoTitle = document.getElementById('info-title');
+const infoDescription = document.getElementById('info-description');
+let currentInteraction = null;
+let vendingBusy = false;
 
-window.addEventListener('click', (event) => {
-  // Ignore clicks on UI elements
-  if (event.target.tagName === 'BUTTON' || event.target.closest('#hud')) return;
+function showInfo(title, description) {
+  infoTitle.textContent = title;
+  infoDescription.textContent = description;
+  infoPanel.classList.remove('hidden');
+}
+document.getElementById('close-info').addEventListener('click', () => infoPanel.classList.add('hidden'));
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  
-  const intersects = raycaster.intersectObjects(scene.children, true);
-  for (let i = 0; i < intersects.length; i++) {
-    const obj = intersects[i].object;
-    if (obj.userData.isInteractableDoor) {
-      obj.userData.isOpen = !obj.userData.isOpen;
-      // Swing inwards by 90 degrees
-      obj.userData.targetRotation = obj.userData.isOpen ? Math.PI / 2 : 0;
-      break; 
-    } else if (obj.userData.isSwitch) {
-      const light = obj.userData.targetLight;
-      light.intensity = light.intensity > 0 ? 0 : 1.5;
-      break;
-    } else if (obj.userData.isVendingMachine) {
-      const light = obj.userData.targetLight;
-      light.intensity = 2.0; // Turn light on
-      playDropSound(light);  // Pass light so it turns off when sound ends
-      break;
-    }
+function findInteractionObject(object) {
+  let node = object;
+  while (node) {
+    if (node.userData.interactionRoot) return node.userData.interactionRoot;
+    if (node.userData.interaction) return node;
+    node = node.parent;
   }
-});
+  return null;
+}
+
+function scanForInteraction() {
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const hit = raycaster.intersectObjects(scene.children, true)
+    .map(result => ({ ...result, root: findInteractionObject(result.object) }))
+    .find(result => result.root && result.distance <= 4.2);
+  currentInteraction = hit?.root || null;
+  if (currentInteraction) {
+    promptEl.textContent = `[E] ${currentInteraction.userData.interaction.prompt}`;
+    promptEl.classList.remove('hidden');
+  } else promptEl.classList.add('hidden');
+}
+
+function interact(root) {
+  const data = root?.userData.interaction;
+  if (!data) return;
+  if (data.type === 'lockedDoor' || data.type === 'info') showInfo(data.title, data.description);
+  if (data.type === 'vending' && !vendingBusy) {
+    vendingBusy = true;
+    root.userData.targetLight.intensity = 2;
+    playDropSound(root.userData.targetLight);
+    startVendingAnimation(root);
+    setTimeout(() => { vendingBusy = false; }, 1800);
+  }
+  if (data.type === 'chair') {
+    if (isPlayerSeated()) { standUp(); return; }
+    const seatPosition = new THREE.Vector3();
+    root.getWorldPosition(seatPosition);
+    const facing = new THREE.Vector3(0, 0, -1).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion()));
+    sitAt(seatPosition, Math.atan2(-facing.x, -facing.z));
+  }
+}
 
 /* ---------------- KEYBOARD INTERACTION ---------------- */
 let isNight = false;
 window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'e' && !e.repeat) interact(currentInteraction);
   if (e.key.toLowerCase() === 'l') {
     isNight = !isNight;
     setDayNightMode(isNight);
@@ -83,6 +110,8 @@ function animate() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05);
   updateControls(dt);
+  updateVendingMachines(dt);
+  scanForInteraction();
 
   // Smoothly animate any interactable doors
   scene.traverse(c => {

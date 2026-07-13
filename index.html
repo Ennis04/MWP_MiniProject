@@ -56,6 +56,22 @@
   }
   #toggle-hud:hover { border-color: rgba(232,169,58,0.55); }
 
+  #interaction-prompt { position: fixed; left: 50%; bottom: 34px; z-index: 12; transform: translateX(-50%); padding: 10px 15px; color: #fff; background: rgba(12,13,16,.82); border: 1px solid rgba(232,169,58,.55); border-radius: 9px; font-size: 13px; pointer-events: none; transition: opacity .18s; }
+  #interaction-prompt.hidden { opacity: 0; }
+  #info-panel { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 20px; background: rgba(5,6,8,.58); backdrop-filter: blur(5px); }
+  #info-panel.hidden { display: none; }
+  #welcome-screen { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 20px; background: linear-gradient(135deg, rgba(28,46,46,.96), rgba(22,16,15,.94)); transition: opacity .45s ease; }
+  #welcome-screen.hidden { opacity: 0; pointer-events: none; }
+  .welcome-card { width: min(620px,100%); padding: 38px; color: #f8f3ea; background: rgba(22,21,19,.78); border: 1px solid rgba(232,169,58,.42); border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,.5); text-align: center; }
+  .welcome-card h1 { margin: 8px 0 12px; font-size: clamp(28px,5vw,46px); }
+  .welcome-card p { color: #d9d4ca; line-height: 1.6; }
+  .welcome-card button { margin-top: 18px; padding: 12px 24px; border: 0; border-radius: 10px; color: #20160d; background: var(--accent); font-weight: 700; cursor: pointer; }
+  .info-card { width: min(460px,100%); padding: 24px; color: #f4efe6; background: rgba(25,22,19,.96); border: 1px solid rgba(232,169,58,.45); border-radius: 14px; box-shadow: 0 18px 55px rgba(0,0,0,.55); }
+  .info-card .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+  .info-card h2 { margin: 7px 0 10px; font-size: 22px; }
+  .info-card p { margin: 0 0 18px; line-height: 1.55; color: #ddd5c8; }
+  .info-card button { float: right; padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 600; }
+
   @media (max-width: 640px) {
     #hud { max-width: calc(100vw - 88px); padding: 10px 14px; }
     #hud .controls { font-size: 11px; line-height: 1.6; }
@@ -66,20 +82,33 @@
 
 <div id="loading-screen">
   <div class="spinner"></div>
-  <h2>ENTERING P19 COURTYARD&hellip;</h2>
+  <h2>ENTERING P19, UTM&hellip;</h2>
 </div>
 
 <div id="hud">
-  <h1>P19 — UTM Faculty Courtyard</h1>
-  <div class="sub">Reconstructed from on-site reference photos</div>
+  <h1>P19, UTM</h1>
   <div class="controls">
     <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</div>
     <div><kbd>L</kbd> Toggle Day/Night</div>
+    <div><kbd>E</kbd> Interact with highlighted objects</div>
     <div>Drag / Touch — Look around</div>
     <div>Scroll — Zoom</div>
   </div>
 </div>
 <button id="toggle-hud" type="button">Hide info</button>
+<div id="interaction-prompt" class="hidden" aria-live="polite"></div>
+<div id="info-panel" class="hidden" role="dialog" aria-modal="true" aria-labelledby="info-title">
+  <div class="info-card"><div class="eyebrow">P19 information point</div><h2 id="info-title"></h2><p id="info-description"></p><button id="close-info" type="button">Continue tour</button></div>
+</div>
+
+<div id="welcome-screen">
+  <div class="welcome-card">
+    <div class="eyebrow">Interactive 3D campus tour</div>
+    <h1>Welcome to P19</h1>
+    <p>Explore P19, UTM, discover its lecture halls and facilities, and interact with highlighted objects. Use WASD to walk, drag to look, and press E to interact.</p>
+    <button id="enter-tour" type="button">Enter P19</button>
+  </div>
+</div>
 
 <script type="importmap">
 {

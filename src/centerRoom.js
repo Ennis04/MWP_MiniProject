@@ -15,8 +15,8 @@ export function buildCenterRoom(scene, x, z, rotY) {
   const wallThickness = 0.2;
 
   // --- MATERIALS ---
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a8c82, roughness: 0.9 }); // Teal/green
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15, roughness: 0.8 }); // Brown doors
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x729a96, roughness: 0.9 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x75452f, roughness: 0.8 });
   const glassMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.4 });
   const frameMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 }); // White window frames
   const signMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.5 }); // Yellow posters
@@ -162,12 +162,11 @@ export function buildCenterRoom(scene, x, z, rotY) {
     doorGeo.translate(0, doorH / 2, doorW / 2);
 
     const door = new THREE.Mesh(doorGeo, woodMat);
-    door.userData.isInteractableDoor = true;
-    door.userData.isOpen = false;
-    door.userData.targetRotation = 0;
-    door.userData.pivot = doorPivot;
+    door.userData.interaction = { type: 'lockedDoor', prompt: 'Check door', title: 'Restricted room', description: 'This room is locked during the virtual tour.' };
+    door.userData.interactionRoot = door;
     
     doorPivot.add(door);
+    solidMeshes.push(door);
 
     // Yellow Poster
     const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.4), signMat);

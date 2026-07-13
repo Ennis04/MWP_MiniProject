@@ -11,8 +11,8 @@ export function buildSquareRoom(scene, x, z, rotY) {
   const wallThick = 0.2;
 
   // Materials
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a8c82, roughness: 0.9 });
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15, roughness: 0.8 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x729a96, roughness: 0.9 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x75452f, roughness: 0.8 });
   const glassMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.4 });
   const frameMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
 
@@ -105,11 +105,10 @@ export function buildSquareRoom(scene, x, z, rotY) {
   doorGeo.translate(-0.44, 1.0, 0); // Translate so hinge is at local origin
 
   const door = new THREE.Mesh(doorGeo, woodMat);
-  door.userData.isInteractableDoor = true;
-  door.userData.isOpen = false;
-  door.userData.targetRotation = 0;
-  door.userData.pivot = doorPivot;
+  door.userData.interaction = { type: 'lockedDoor', prompt: 'Check door', title: 'Dewan kuliah', description: 'This lecture hall is locked during the virtual tour.' };
+  door.userData.interactionRoot = door;
   doorPivot.add(door);
+  solidMeshes.push(door);
 
   // --- ROOF ---
   const roof = new THREE.Mesh(new THREE.BoxGeometry(size, 0.2, size), wallMat);

@@ -34,9 +34,18 @@ export function resolveCustomCollisions(pos, playerRadius = 0.3) {
     const dist = Math.hypot(dx, dz);
 
     if (dist < playerRadius) {
-      if (dist === 0) {
-        // Player is somehow perfectly inside the box, push them out arbitrarily (rare)
-        pos.x += playerRadius;
+      if (dist < 0.0001) {
+        // Resolve to the nearest expanded face. This also handles a player
+        // landing inside a thin door collider after a long/slow frame.
+        const left = Math.abs(pos.x - (b.minX - playerRadius));
+        const right = Math.abs((b.maxX + playerRadius) - pos.x);
+        const back = Math.abs(pos.z - (b.minZ - playerRadius));
+        const front = Math.abs((b.maxZ + playerRadius) - pos.z);
+        const nearest = Math.min(left, right, back, front);
+        if (nearest === left) pos.x = b.minX - playerRadius;
+        else if (nearest === right) pos.x = b.maxX + playerRadius;
+        else if (nearest === back) pos.z = b.minZ - playerRadius;
+        else pos.z = b.maxZ + playerRadius;
       } else {
         // Push the player away from the closest edge point
         const push = playerRadius - dist;

@@ -15,6 +15,9 @@ const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const lookStart = new THREE.Vector3(0, 1.5, 0).sub(camera.position);
 let yaw = Math.atan2(-lookStart.x, -lookStart.z);
 let pitch = 0;
+let targetYaw = yaw;
+let targetPitch = pitch;
+let seated = false;
 camera.rotation.set(pitch, yaw, 0);
 
 let dragging = false;
@@ -32,8 +35,8 @@ window.addEventListener('pointermove', e => {
   const dy = e.clientY - lastPY;
   lastPX = e.clientX;
   lastPY = e.clientY;
-  yaw -= dx * LOOK_SPEED;
-  pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch - dy * LOOK_SPEED));
+  targetYaw -= dx * LOOK_SPEED;
+  targetPitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, targetPitch - dy * LOOK_SPEED));
 });
 window.addEventListener('pointerup', () => { dragging = false; });
 window.addEventListener('pointercancel', () => { dragging = false; });
@@ -51,6 +54,8 @@ window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (k i
 window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k in keys) keys[k] = false; });
 
 const moveSpeed = 4.2;
+const velocity = new THREE.Vector3();
+const MOVE_RESPONSE = 12;
 // Kept just inside the pillar/wall ring so the tour stays inside the
 // building on every side — walled sides stop at the wall face, open sides
 // stop right at the threshold instead of letting people wander onto the lawn.
@@ -63,18 +68,21 @@ function updateMovement(dt) {
   if (keys.s) moveZ -= 1;
   if (keys.a) moveX -= 1;
   if (keys.d) moveX += 1;
-  if (!moveX && !moveZ) return;
+  if ((moveX || moveZ) && seated) seated = false;
 
   // Built from yaw alone — never pitch — so looking up or down never
   // changes walking speed or direction, and this never touches Y at all.
   const sinYaw = Math.sin(yaw), cosYaw = Math.cos(yaw);
-  const delta = new THREE.Vector3(
+  const desired = new THREE.Vector3(
     -sinYaw * moveZ + cosYaw * moveX,
     0,
     -cosYaw * moveZ - sinYaw * moveX
   );
-  if (delta.lengthSq() === 0) return;
-  delta.normalize().multiplyScalar(moveSpeed * dt);
+  if (desired.lengthSq() > 0) desired.normalize().multiplyScalar(moveSpeed);
+  const blend = 1 - Math.exp(-MOVE_RESPONSE * dt);
+  velocity.lerp(desired, blend);
+  if (velocity.lengthSq() < 0.0001) { velocity.set(0, 0, 0); return; }
+  const delta = velocity.clone().multiplyScalar(dt);
 
   const nextPos = camera.position.clone().add(delta);
   resolveCustomCollisions(nextPos, 0.4); // Player radius 0.4
@@ -83,8 +91,15 @@ function updateMovement(dt) {
   camera.position.y = EYE_HEIGHT; // hard-locked — navigation never moves Y
 }
 
+export function sitAt(worldPosition, facingYaw) { seated = true; velocity.set(0,0,0); camera.position.copy(worldPosition); yaw = targetYaw = facingYaw; pitch = targetPitch = 0; }
+export function standUp() { seated = false; camera.position.y = EYE_HEIGHT; }
+export function isPlayerSeated() { return seated; }
+
 // Called once per frame from main.js's animate loop.
 export function updateControls(dt) {
   updateMovement(dt);
+  const lookBlend = 1 - Math.exp(-18 * dt);
+  yaw += (targetYaw - yaw) * lookBlend;
+  pitch += (targetPitch - pitch) * lookBlend;
   camera.rotation.set(pitch, yaw, 0);
 }

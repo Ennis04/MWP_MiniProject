@@ -63,6 +63,12 @@ export function buildStudyDesk(scene, x, z, rotY) {
     seat.castShadow = true;
     group.add(seat);
 
+    const chairAnchor = new THREE.Object3D();
+    chairAnchor.position.set(cx, 1.12, seatDepthOffset - 0.03);
+    chairAnchor.userData.interaction = { type: 'chair', prompt: 'Sit on chair' };
+    group.add(chairAnchor);
+    seat.userData.interactionRoot = chairAnchor;
+
     // Backrest
     const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.05), seatMat);
     backrest.position.set(cx, seatHeight + 0.2, seatDepthOffset + 0.2);
@@ -70,6 +76,7 @@ export function buildStudyDesk(scene, x, z, rotY) {
     backrest.rotation.x = -0.1;
     backrest.castShadow = true;
     group.add(backrest);
+    backrest.userData.interactionRoot = chairAnchor;
 
     // Support pipes for the chair
     // Vertical leg straight down to the floor
@@ -78,15 +85,19 @@ export function buildStudyDesk(scene, x, z, rotY) {
     legPipe.position.set(cx, legDist / 2, seatDepthOffset);
     legPipe.castShadow = true;
     group.add(legPipe);
+    legPipe.userData.interactionRoot = chairAnchor;
 
     // Post to support the backrest
     const backPipe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.2, 0.06), metalMat);
     backPipe.position.set(cx, seatHeight + 0.05, seatDepthOffset + 0.15);
     backPipe.castShadow = true;
     group.add(backPipe);
+    backPipe.userData.interactionRoot = chairAnchor;
   });
 
   scene.add(group);
+  group.updateMatrixWorld(true);
+  group.traverse(child => { if (child.userData.interaction?.type === 'chair') child.userData.interactionRoot = child; });
 
   // 5. Collision registration
   group.updateMatrixWorld(true);
